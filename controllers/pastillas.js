@@ -43,7 +43,7 @@ const TomarPastilla = async (req, res = response) => {
         });
 
     // Verificar si la cantidadInsertadas es 0 y enviar un mensaje de advertencia
-    if (cantidadInsertadas === 0) {
+    if (!disponible) {
         const mensaje = `La cantidad de pastillas ${nombre} es 0. Debes insertar más pastillas en el pastillero.`;
 
         await sendMessage(mensaje);
