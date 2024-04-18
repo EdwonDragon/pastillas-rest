@@ -1,6 +1,5 @@
-const accountSid = process.env.accountSid // El id de tu cuenta; 
-const authToken = process.env.authToken // El TOKEN de tu cuenta; 
-const client = require('twilio')(accountSid, authToken);
+
+const client = require('twilio')(process.env.accountSid, process.env.authToken);
 
 
 const sendMessage = async (mensaje) => {
