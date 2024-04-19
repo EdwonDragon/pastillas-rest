@@ -5,7 +5,7 @@ const {
     Pastillas
 } = require('../models');
 const { sendMessage } = require('../helpers');
-
+const moment = require('moment');
 //Obtener categorias paginado -total -populate
 const PastillasGet = async (req, res = response) => {
     const {
@@ -125,6 +125,9 @@ const crearPastillas = async (req, res = response) => {
         nombre
     });
 
+    // Parsear la fecha ingresada al formato ISO utilizando moment
+    const fechaInicioISO = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').toISOString();
+
     if (nombrePastilla) {
         res.status(400).json({
             msg: `La pastilla ${nombrePastilla.nombre} ya existe`
@@ -138,7 +141,7 @@ const crearPastillas = async (req, res = response) => {
         cantidadInsertadas,
         cantidadTomadas,
         disponible,
-        fechaHoraInicio,
+        fechaHoraInicio: fechaInicioISO,
         frecuenciaHoras,
         dosis
     }
