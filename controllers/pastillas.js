@@ -115,7 +115,7 @@ const crearPastillas = async (req, res = response) => {
         usuario,
         cantidadInsertadas,
         cantidadTomadas,
-        disponible,
+
         fechaHoraInicio,
         frecuenciaHoras,
         dosis
@@ -140,7 +140,7 @@ const crearPastillas = async (req, res = response) => {
         usuario,
         cantidadInsertadas,
         cantidadTomadas,
-        disponible,
+        disponible: true,
         fechaHoraInicio: fechaInicioISO,
         frecuenciaHoras,
         dosis
