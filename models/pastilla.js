@@ -36,7 +36,12 @@ const PastillasSchema = Schema({
     dosis: {
         type: Number,
         required: [true, 'La dosis es obligatoria'],
-    }
+    },
+
+    espacio: {
+        type: Number,
+        required: [true, 'El espacio es obligatoria'],
+    },
 })
 
 

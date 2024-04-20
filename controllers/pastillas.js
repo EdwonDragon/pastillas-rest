@@ -140,7 +140,7 @@ const crearPastillas = async (req, res = response) => {
         usuario,
         cantidadInsertadas,
         cantidadTomadas,
-
+        espacio,
         fechaHoraInicio,
         frecuenciaHoras,
         dosis
@@ -148,6 +148,9 @@ const crearPastillas = async (req, res = response) => {
 
     const nombrePastilla = await Pastillas.findOne({
         nombre
+    });
+    const espacioPastilla = await Pastillas.findOne({
+        espacio
     });
 
     // Parsear la fecha ingresada al formato ISO utilizando moment
@@ -159,11 +162,25 @@ const crearPastillas = async (req, res = response) => {
         })
         return
     }
+    if (espacio > 5 || espacio < 0) {
+        res.status(400).json({
+            msg: `El numero de espacios es del 1 al 5`
+        })
+        return
+    }
+    if (espacioPastilla) {
+        res.status(400).json({
+            msg: `El ${nombrePastilla.espacio} ya esta ocupado`
+        })
+        return
+    }
+
     //Generar los datos a guardar
     const data = {
         nombre,
         usuario,
         cantidadInsertadas,
+        espacio,
         cantidadTomadas,
         disponible: true,
         fechaHoraInicio: fechaInicioISO,
