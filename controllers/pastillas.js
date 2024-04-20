@@ -9,10 +9,10 @@ const moment = require('moment');
 //Obtener categorias paginado -total -populate
 const PastillasGet = async (req, res = response) => {
     const {
-        limite = 5, desde = 0, usuario
+        limite = 5, desde = 0
     } = req.body;
     const query = {
-        usuario
+        usuario: req.params.usuario
     };
     //Colección de awaits con promesos estas no dependen de otras
     //Se ejecutan las dos al mimo tiempo
