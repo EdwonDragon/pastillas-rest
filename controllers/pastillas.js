@@ -18,13 +18,9 @@ const PastillasGet = async (req, res = response) => {
     const [total, pastilla] = await Promise.all([
         Pastillas.countDocuments(query),
         Pastillas.find(query)
-        // .skip(Number(desde))
-        // .limit(Number(limite))
-
-
     ]);
-    res.status(200).json({
 
+    res.status(200).json({
         total,
         pastilla
     })
@@ -71,6 +67,36 @@ const TomarPastilla = async (req, res = response) => {
     res.status(201).json({
         pastilla
     });
+}
+
+
+
+const EvaluarPastilla = async (req, res = response) => {
+    const { usuario } = req.params;
+
+    // Obtener todas las pastillas del usuario
+    const pastillas = await Pastillas.find({ usuario });
+
+    // Obtener la fecha y hora actual
+    const fechaActual = moment().toISOString();
+
+    // Filtrar las pastillas que deben ser tomadas en este momento
+    const pastillasParaTomar = pastillas.filter(pastilla => {
+        const fechaInicio = moment(pastilla.fechaHoraInicio);
+        const frecuenciaHoras = pastilla.frecuenciaHoras;
+        const diferenciaHoras = moment(fechaActual).diff(fechaInicio, 'hours');
+
+        // Verificar si la diferencia de horas es un múltiplo de la frecuencia
+        return diferenciaHoras % frecuenciaHoras === 0;
+    });
+
+    // Si hay pastillas para tomar, enviar la cadena con los IDs
+    if (pastillasParaTomar.length > 0) {
+        const ids = pastillasParaTomar.map(pastilla => pastilla._id).join('');
+        res.status(200).json({ mensaje: `prend${ids}` });
+    } else {
+        res.status(200).json({ mensaje: 'noprend' });
+    }
 }
 
 
@@ -154,5 +180,6 @@ module.exports = {
     crearPastillas,
     TomarPastilla,
     InsertarPastilla,
-    BorrarPastilla
+    BorrarPastilla,
+    EvaluarPastilla
 }
