@@ -14,8 +14,7 @@ const PastillasGet = async (req, res = response) => {
     const query = {
         usuario: req.params.usuario
     };
-    //Colección de awaits con promesos estas no dependen de otras
-    //Se ejecutan las dos al mimo tiempo
+    console.log("peticion")
     const [total, pastilla] = await Promise.all([
         Pastillas.countDocuments(query),
         Pastillas.find(query)
