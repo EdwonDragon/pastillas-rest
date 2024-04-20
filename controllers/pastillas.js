@@ -8,9 +8,9 @@ const { sendMessage } = require('../helpers');
 const moment = require('moment');
 //Obtener categorias paginado -total -populate
 const PastillasGet = async (req, res = response) => {
-    const {
-        limite = 5, desde = 0
-    } = req.body;
+    // const {
+    //     limite = 5, desde = 0
+    // } = req.body;
     const query = {
         usuario: req.params.usuario
     };
@@ -19,8 +19,8 @@ const PastillasGet = async (req, res = response) => {
     const [total, pastilla] = await Promise.all([
         Pastillas.countDocuments(query),
         Pastillas.find(query)
-            .skip(Number(desde))
-            .limit(Number(limite))
+        // .skip(Number(desde))
+        // .limit(Number(limite))
 
 
     ]);

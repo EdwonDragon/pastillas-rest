@@ -11,7 +11,7 @@ const { PastillasGet, crearPastillas, TomarPastilla, InsertarPastilla, BorrarPas
 
 const router = Router();
 
-router.get('/', PastillasGet);
+router.get('/:usuario', PastillasGet);
 router.post('/crear', crearPastillas);
 router.post('/tomar', TomarPastilla);
 router.post('/insertar', InsertarPastilla);
