@@ -170,7 +170,7 @@ const crearPastillas = async (req, res = response) => {
     }
     if (espacioPastilla) {
         res.status(400).json({
-            msg: `El ${nombrePastilla.espacio} ya esta ocupado`
+            msg: `El ${espacioPastilla.espacio} ya esta ocupado`
         })
         return
     }
