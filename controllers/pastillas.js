@@ -69,35 +69,49 @@ const TomarPastilla = async (req, res = response) => {
     });
 }
 
-
-
 const EvaluarPastilla = async (req, res = response) => {
     const { usuario } = req.params;
 
     // Obtener todas las pastillas del usuario
     const pastillas = await Pastillas.find({ usuario });
 
-    // Obtener la fecha y hora actual
-    const fechaActual = moment().toISOString();
-
-    // Filtrar las pastillas que deben ser tomadas en este momento
-    const pastillasParaTomar = pastillas.filter(pastilla => {
-        const fechaInicio = moment(pastilla.fechaHoraInicio);
-        const frecuenciaHoras = pastilla.frecuenciaHoras;
-        const diferenciaHoras = moment(fechaActual).diff(fechaInicio, 'hours');
-
-        // Verificar si la diferencia de horas es un múltiplo de la frecuencia
-        return diferenciaHoras >= 0 && diferenciaHoras % frecuenciaHoras === 0;
+    const mensajesPromesa = pastillas.map(async (pastilla) => {
+        const mensaje = await verificarYEnviarAdvertencia(pastilla);
+        return mensaje;
     });
 
-    // Si hay pastillas para tomar, enviar la cadena con los IDs
-    if (pastillasParaTomar.length > 0) {
-        const espacios = pastillasParaTomar.map(pastilla => pastilla.espacio).join('');
-        res.status(200).json({ mensaje: `prend${espacios}` });
+    // Esperar a que todas las promesas se resuelvan
+    const mensajes = await Promise.all(mensajesPromesa);
+
+    // Unir todos los mensajes en una cadena
+    const espacios = mensajes.join('');
+
+
+    res.status(200).json({ mensaje: `prend${espacios}` });
+
+}
+
+const verificarYEnviarAdvertencia = async (pastilla) => {
+    const fechaHoraActual = new Date();
+    const fechaHoraInicio = new Date(pastilla.fechaHoraInicio);
+    const frecuenciaHoras = parseInt(pastilla.frecuenciaHoras);
+
+    // Calcular la diferencia en horas
+    const diferenciaHoras = (fechaHoraActual - fechaHoraInicio) / (1000 * 60 * 60);
+
+    // Verificar si es necesario enviar una advertencia
+    if (diferenciaHoras >= frecuenciaHoras) {
+        const mensaje = `Es hora de tomar la pastilla ${pastilla.nombre}.`;
+        await sendMessage(mensaje)
+        // Actualizar la fechaHoraInicio para reiniciar el contador
+        pastilla.fechaHoraInicio = fechaHoraActual.toISOString();
+        await pastilla.save();
+        return pastilla.espacio;
     } else {
-        res.status(200).json({ mensaje: 'noprend' });
+        return ""
     }
 }
+
 
 
 
