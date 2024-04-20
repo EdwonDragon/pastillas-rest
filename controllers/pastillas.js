@@ -87,17 +87,18 @@ const EvaluarPastilla = async (req, res = response) => {
         const diferenciaHoras = moment(fechaActual).diff(fechaInicio, 'hours');
 
         // Verificar si la diferencia de horas es un múltiplo de la frecuencia
-        return diferenciaHoras % frecuenciaHoras === 0;
+        return diferenciaHoras >= 0 && diferenciaHoras % frecuenciaHoras === 0;
     });
 
     // Si hay pastillas para tomar, enviar la cadena con los IDs
     if (pastillasParaTomar.length > 0) {
-        const spaces = pastillasParaTomar.map(pastilla => pastilla.espacio).join('');
-        res.status(200).json({ mensaje: `prend${spaces}` });
+        const espacios = pastillasParaTomar.map(pastilla => pastilla.espacio).join('');
+        res.status(200).json({ mensaje: `prend${espacios}` });
     } else {
         res.status(200).json({ mensaje: 'noprend' });
     }
 }
+
 
 
 
