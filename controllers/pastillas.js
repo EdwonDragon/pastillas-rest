@@ -92,8 +92,8 @@ const EvaluarPastilla = async (req, res = response) => {
 
     // Si hay pastillas para tomar, enviar la cadena con los IDs
     if (pastillasParaTomar.length > 0) {
-        const ids = pastillasParaTomar.map(pastilla => pastilla._id).join('');
-        res.status(200).json({ mensaje: `prend${ids}` });
+        const names = pastillasParaTomar.map(pastilla => pastilla.name).join('');
+        res.status(200).json({ mensaje: `prend${names}` });
     } else {
         res.status(200).json({ mensaje: 'noprend' });
     }
