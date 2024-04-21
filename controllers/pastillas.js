@@ -233,7 +233,7 @@ const ActualizarFechaInicio = async (req, res = response) => {
 }
 
 const BorrarPastillasPorUsuario = async (req, res = response) => {
-    const { usuario } = req.params; // Usuario del que se desea borrar las pastillas
+    const { usuario } = req.body; // Usuario del que se desea borrar las pastillas
 
     try {
         const resultado = await Pastillas.deleteMany({ usuario });
