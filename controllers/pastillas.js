@@ -205,8 +205,7 @@ const crearPastillas = async (req, res = response) => {
 }
 
 const ActualizarFechaInicio = async (req, res = response) => {
-
-    const { fechaHoraInicio, id } = req.body;
+    const { fechaHoraInicio, id, nombre, dosis } = req.body;
 
     try {
         const pastilla = await Pastillas.findById(id);
@@ -220,17 +219,26 @@ const ActualizarFechaInicio = async (req, res = response) => {
         // Parsear la fecha ingresada al formato ISO utilizando moment
         const fechaInicioISO = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').toISOString();
 
+        // Actualizar los campos nombre, dosis y fechaHoraInicio si se proporcionan
+        if (nombre) {
+            pastilla.nombre = nombre.toUpperCase();
+        }
+        if (dosis) {
+            pastilla.dosis = dosis;
+        }
         pastilla.fechaHoraInicio = fechaInicioISO;
+
         await pastilla.save();
 
         res.json(pastilla);
     } catch (error) {
         console.log(error);
         res.status(500).json({
-            msg: 'Error al actualizar la fecha de inicio'
+            msg: 'Error al actualizar la pastilla'
         });
     }
 }
+
 
 const BorrarPastillasPorUsuario = async (req, res = response) => {
     const { usuario } = req.body; // Usuario del que se desea borrar las pastillas
