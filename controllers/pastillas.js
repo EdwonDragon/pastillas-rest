@@ -114,9 +114,6 @@ const verificarYEnviarAdvertencia = async (pastilla) => {
 
 
 
-
-
-
 const InsertarPastilla = async (req, res = response) => {
     const {
         id,
@@ -207,11 +204,65 @@ const crearPastillas = async (req, res = response) => {
     res.status(201).json(pastilla)
 }
 
+const ActualizarFechaInicio = async (req, res = response) => {
+
+    const { fechaHoraInicio, id } = req.body;
+
+    try {
+        const pastilla = await Pastillas.findById(id);
+
+        if (!pastilla) {
+            return res.status(404).json({
+                msg: 'Pastilla no encontrada'
+            });
+        }
+
+        // Parsear la fecha ingresada al formato ISO utilizando moment
+        const fechaInicioISO = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').toISOString();
+
+        pastilla.fechaHoraInicio = fechaInicioISO;
+        await pastilla.save();
+
+        res.json(pastilla);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al actualizar la fecha de inicio'
+        });
+    }
+}
+
+const BorrarPastillasPorUsuario = async (req, res = response) => {
+    const { usuario } = req.params; // Usuario del que se desea borrar las pastillas
+
+    try {
+        const resultado = await Pastillas.deleteMany({ usuario });
+
+        if (resultado.deletedCount === 0) {
+            return res.status(404).json({
+                msg: `No se encontraron pastillas para el usuario ${usuario}`
+            });
+        }
+
+        res.json({
+            msg: `Todas las pastillas del usuario ${usuario} han sido borradas`
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: 'Error al borrar las pastillas'
+        });
+    }
+}
+
+
 module.exports = {
     PastillasGet,
     crearPastillas,
     TomarPastilla,
     InsertarPastilla,
     BorrarPastilla,
-    EvaluarPastilla
+    EvaluarPastilla,
+    ActualizarFechaInicio,
+    BorrarPastillasPorUsuario
 }
