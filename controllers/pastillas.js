@@ -69,6 +69,11 @@ const TomarPastilla = async (req, res = response) => {
     });
 }
 
+// Función para convertir una fecha string a milisegundos
+const strtotime = (str) => {
+    return new Date(str).getTime();
+};
+
 const EvaluarPastilla = async (req, res = response) => {
     const { usuario } = req.params;
 
@@ -99,23 +104,20 @@ const EvaluarPastilla = async (req, res = response) => {
 }
 
 const verificarYEnviarAdvertencia = async (pastilla) => {
-    const fechaHoraActual = new Date();
-    const fechaHoraInicio = new Date(pastilla.fechaHoraInicio);
-    const frecuenciaHoras = parseInt(pastilla.frecuenciaHoras);
+    const fechaHoraActual = new Date().getTime(); // Fecha y hora actual en milisegundos
+    const fechaHoraInicio = strtotime(pastilla.fechaHoraInicio); // Convertir fecha inicio a milisegundos
+    const frecuenciaHoras = parseInt(pastilla.frecuenciaHoras) * 60 * 60 * 1000; // Convertir horas a milisegundos
 
     // Calcular la diferencia en milisegundos
     const diferenciaMs = fechaHoraActual - fechaHoraInicio;
 
-    // Convertir la frecuencia a milisegundos
-    const frecuenciaMs = frecuenciaHoras * 60 * 60 * 1000;
-
     // Verificar si es necesario enviar una advertencia
-    if (diferenciaMs >= frecuenciaMs) {
+    if (diferenciaMs >= frecuenciaHoras) {
         const mensaje = `Es hora de tomar la pastilla ${pastilla.nombre}.`;
         await sendMessage(mensaje);
 
         // Actualizar la fechaHoraInicio para reiniciar el contador
-        pastilla.fechaHoraInicio = fechaHoraActual.toISOString();
+        pastilla.fechaHoraInicio = new Date().toISOString();
         await pastilla.save();
 
         return pastilla.espacio;
@@ -123,6 +125,7 @@ const verificarYEnviarAdvertencia = async (pastilla) => {
         return null;
     }
 }
+
 
 
 
@@ -171,10 +174,13 @@ const crearPastillas = async (req, res = response) => {
     } = req.body;
 
     const nombrePastilla = await Pastillas.findOne({
-        nombre
+        nombre,
+        usuario
+
     });
     const espacioPastilla = await Pastillas.findOne({
-        espacio
+        espacio,
+        usuario
     });
 
     // Parsear la fecha ingresada al formato ISO utilizando moment
