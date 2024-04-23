@@ -72,45 +72,54 @@ const TomarPastilla = async (req, res = response) => {
 const EvaluarPastilla = async (req, res = response) => {
     const { usuario } = req.params;
 
-    // Obtener todas las pastillas del usuario
-    const pastillas = await Pastillas.find({ usuario });
+    try {
+        // Obtener todas las pastillas del usuario
+        const pastillas = await Pastillas.find({ usuario });
 
-    const mensajesPromesa = pastillas.map(async (pastilla) => {
-        const mensaje = await verificarYEnviarAdvertencia(pastilla);
-        return mensaje;
-    });
+        // Obtener la fecha y hora actual
+        const fechaHoraActual = moment.utc();
 
-    // Esperar a que todas las promesas se resuelvan
-    const mensajes = await Promise.all(mensajesPromesa);
+        // Ordenar las pastillas por la fecha y hora de inicio más cercana al momento actual
+        pastillas.sort((a, b) => {
+            const fechaHoraInicioA = moment.utc(a.fechaHoraInicio);
+            const fechaHoraInicioB = moment.utc(b.fechaHoraInicio);
 
-    // Unir todos los mensajes en una cadena
-    const espacios = mensajes.join('');
+            return fechaHoraInicioA.diff(fechaHoraActual) - fechaHoraInicioB.diff(fechaHoraActual);
+        });
 
+        // Verificar y enviar advertencias para la próxima pastilla a tomar
+        const mensaje = await verificarYEnviarAdvertencia(pastillas[0]);
 
-    res.status(200).json({ mensaje: `prend${espacios}` });
+        res.status(200).json({ mensaje: `prend${mensaje}` });
 
-}
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ mensaje: 'Error al evaluar las pastillas' });
+    }
+};
 
 const verificarYEnviarAdvertencia = async (pastilla) => {
-    const fechaHoraActual = new Date();
-    const fechaHoraInicio = new Date(pastilla.fechaHoraInicio);
+    const fechaHoraActual = moment.utc();
+    const fechaHoraInicio = moment.utc(pastilla.fechaHoraInicio);
     const frecuenciaHoras = parseInt(pastilla.frecuenciaHoras);
 
     // Calcular la diferencia en horas
-    const diferenciaHoras = (fechaHoraActual - fechaHoraInicio) / (1000 * 60 * 60);
+    const diferenciaHoras = fechaHoraActual.diff(fechaHoraInicio, 'hours');
 
     // Verificar si es necesario enviar una advertencia
     if (diferenciaHoras >= frecuenciaHoras) {
         const mensaje = `Es hora de tomar la pastilla ${pastilla.nombre}.`;
-        await sendMessage(mensaje)
+        await sendMessage(mensaje);
+
         // Actualizar la fechaHoraInicio para reiniciar el contador
         pastilla.fechaHoraInicio = fechaHoraActual.toISOString();
         await pastilla.save();
+
         return pastilla.espacio;
     } else {
-        return ""
+        return '';
     }
-}
+};
 
 
 
@@ -146,7 +155,6 @@ const BorrarPastilla = async (req, res = response) => {
 }
 
 const crearPastillas = async (req, res = response) => {
-
     const nombre = req.body.nombre.toUpperCase();
     const {
         usuario,
@@ -159,35 +167,41 @@ const crearPastillas = async (req, res = response) => {
     } = req.body;
 
     const nombrePastilla = await Pastillas.findOne({
-        nombre
-    });
-    const espacioPastilla = await Pastillas.findOne({
-        espacio
+        nombre, usuario
     });
 
-    // Parsear la fecha ingresada al formato ISO utilizando moment
-    const fechaInicioISO = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').toISOString();
+    const espacioPastilla = await Pastillas.findOne({
+        espacio, usuario
+    });
+
+    // Ajustar el formato de la fecha y hora ingresadas
+    const fechaHoraFormatoCorrecto = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
+    // Parsear la fecha ajustada al formato ISO utilizando moment
+    const fechaInicioISO = moment.utc(fechaHoraFormatoCorrecto).toISOString();
 
     if (nombrePastilla) {
         res.status(400).json({
             msg: `La pastilla ${nombrePastilla.nombre} ya existe`
-        })
-        return
-    }
-    if (espacio > 5 || espacio < 0) {
-        res.status(400).json({
-            msg: `El numero de espacios es del 1 al 5`
-        })
-        return
-    }
-    if (espacioPastilla) {
-        res.status(400).json({
-            msg: `El ${espacioPastilla.espacio} ya esta ocupado`
-        })
-        return
+        });
+        return;
     }
 
-    //Generar los datos a guardar
+    if (espacio > 5 || espacio < 0) {
+        res.status(400).json({
+            msg: `El número de espacios es del 1 al 5`
+        });
+        return;
+    }
+
+    if (espacioPastilla) {
+        res.status(400).json({
+            msg: `El espacio ${espacioPastilla.espacio} ya está ocupado`
+        });
+        return;
+    }
+
+    // Generar los datos a guardar
     const data = {
         nombre,
         usuario,
@@ -198,11 +212,13 @@ const crearPastillas = async (req, res = response) => {
         fechaHoraInicio: fechaInicioISO,
         frecuenciaHoras,
         dosis
-    }
+    };
+
     const pastilla = new Pastillas(data);
     await pastilla.save();
-    res.status(201).json(pastilla)
-}
+    res.status(201).json(pastilla);
+};
+
 
 const ActualizarFechaInicio = async (req, res = response) => {
     const { fechaHoraInicio, id, nombre, dosis } = req.body;
@@ -216,8 +232,11 @@ const ActualizarFechaInicio = async (req, res = response) => {
             });
         }
 
-        // Parsear la fecha ingresada al formato ISO utilizando moment
-        const fechaInicioISO = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').toISOString();
+        // Ajustar el formato de la fecha y hora ingresadas
+        const fechaHoraFormatoCorrecto = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
+
+        // Parsear la fecha ajustada al formato ISO utilizando moment
+        const fechaInicioISO = moment.utc(fechaHoraFormatoCorrecto).toISOString();
 
         // Actualizar los campos nombre, dosis y fechaHoraInicio si se proporcionan
         if (nombre) {
@@ -237,7 +256,8 @@ const ActualizarFechaInicio = async (req, res = response) => {
             msg: 'Error al actualizar la pastilla'
         });
     }
-}
+};
+
 
 
 const BorrarPastillasPorUsuario = async (req, res = response) => {

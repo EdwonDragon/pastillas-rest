@@ -4,13 +4,14 @@ const PastillasSchema = Schema({
     nombre: {
         type: String,
         required: [true, 'El nombre es obligatorio'],
-        unique: true
+
     },
 
     usuario: {
         type: String,
         ref: 'Usuario',
-        required: true
+        required: true,
+
 
     },
     cantidadInsertadas: {
