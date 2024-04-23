@@ -76,38 +76,41 @@ const EvaluarPastilla = async (req, res = response) => {
         // Obtener todas las pastillas del usuario
         const pastillas = await Pastillas.find({ usuario });
 
-        // Obtener la fecha y hora actual
-        const fechaHoraActual = moment.utc();
-
-        // Ordenar las pastillas por la fecha y hora de inicio más cercana al momento actual
-        pastillas.sort((a, b) => {
-            const fechaHoraInicioA = moment.utc(a.fechaHoraInicio);
-            const fechaHoraInicioB = moment.utc(b.fechaHoraInicio);
-
-            return fechaHoraInicioA.diff(fechaHoraActual) - fechaHoraInicioB.diff(fechaHoraActual);
+        const mensajesPromesa = pastillas.map(async (pastilla) => {
+            const mensaje = await verificarYEnviarAdvertencia(pastilla);
+            return mensaje;
         });
 
-        // Verificar y enviar advertencias para la próxima pastilla a tomar
-        const mensaje = await verificarYEnviarAdvertencia(pastillas[0]);
+        // Esperar a que todas las promesas se resuelvan
+        const mensajes = await Promise.all(mensajesPromesa);
 
-        res.status(200).json({ mensaje: `prend${mensaje}` });
+        // Filtrar los mensajes vacíos (null)
+        const mensajesFiltrados = mensajes.filter(mensaje => mensaje !== null);
+
+        // Unir todos los mensajes en una cadena
+        const espacios = mensajesFiltrados.join('');
+
+        res.status(200).json({ mensaje: `prend${espacios}` });
 
     } catch (error) {
         console.error(error);
         res.status(500).json({ mensaje: 'Error al evaluar las pastillas' });
     }
-};
+}
 
 const verificarYEnviarAdvertencia = async (pastilla) => {
-    const fechaHoraActual = moment.utc();
-    const fechaHoraInicio = moment.utc(pastilla.fechaHoraInicio);
+    const fechaHoraActual = new Date();
+    const fechaHoraInicio = new Date(pastilla.fechaHoraInicio);
     const frecuenciaHoras = parseInt(pastilla.frecuenciaHoras);
 
-    // Calcular la diferencia en horas
-    const diferenciaHoras = fechaHoraActual.diff(fechaHoraInicio, 'hours');
+    // Calcular la diferencia en milisegundos
+    const diferenciaMs = fechaHoraActual - fechaHoraInicio;
+
+    // Convertir la frecuencia a milisegundos
+    const frecuenciaMs = frecuenciaHoras * 60 * 60 * 1000;
 
     // Verificar si es necesario enviar una advertencia
-    if (diferenciaHoras >= frecuenciaHoras) {
+    if (diferenciaMs >= frecuenciaMs) {
         const mensaje = `Es hora de tomar la pastilla ${pastilla.nombre}.`;
         await sendMessage(mensaje);
 
@@ -117,9 +120,9 @@ const verificarYEnviarAdvertencia = async (pastilla) => {
 
         return pastilla.espacio;
     } else {
-        return '';
+        return null;
     }
-};
+}
 
 
 
@@ -155,6 +158,7 @@ const BorrarPastilla = async (req, res = response) => {
 }
 
 const crearPastillas = async (req, res = response) => {
+
     const nombre = req.body.nombre.toUpperCase();
     const {
         usuario,
@@ -167,41 +171,35 @@ const crearPastillas = async (req, res = response) => {
     } = req.body;
 
     const nombrePastilla = await Pastillas.findOne({
-        nombre, usuario
+        nombre
     });
-
     const espacioPastilla = await Pastillas.findOne({
-        espacio, usuario
+        espacio
     });
 
-    // Ajustar el formato de la fecha y hora ingresadas
-    const fechaHoraFormatoCorrecto = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
-
-    // Parsear la fecha ajustada al formato ISO utilizando moment
-    const fechaInicioISO = moment.utc(fechaHoraFormatoCorrecto).toISOString();
+    // Parsear la fecha ingresada al formato ISO utilizando moment
+    const fechaInicioISO = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').toISOString();
 
     if (nombrePastilla) {
         res.status(400).json({
             msg: `La pastilla ${nombrePastilla.nombre} ya existe`
-        });
-        return;
+        })
+        return
     }
-
     if (espacio > 5 || espacio < 0) {
         res.status(400).json({
-            msg: `El número de espacios es del 1 al 5`
-        });
-        return;
+            msg: `El numero de espacios es del 1 al 5`
+        })
+        return
     }
-
     if (espacioPastilla) {
         res.status(400).json({
-            msg: `El espacio ${espacioPastilla.espacio} ya está ocupado`
-        });
-        return;
+            msg: `El ${espacioPastilla.espacio} ya esta ocupado`
+        })
+        return
     }
 
-    // Generar los datos a guardar
+    //Generar los datos a guardar
     const data = {
         nombre,
         usuario,
@@ -212,13 +210,11 @@ const crearPastillas = async (req, res = response) => {
         fechaHoraInicio: fechaInicioISO,
         frecuenciaHoras,
         dosis
-    };
-
+    }
     const pastilla = new Pastillas(data);
     await pastilla.save();
-    res.status(201).json(pastilla);
-};
-
+    res.status(201).json(pastilla)
+}
 
 const ActualizarFechaInicio = async (req, res = response) => {
     const { fechaHoraInicio, id, nombre, dosis } = req.body;
@@ -232,11 +228,8 @@ const ActualizarFechaInicio = async (req, res = response) => {
             });
         }
 
-        // Ajustar el formato de la fecha y hora ingresadas
-        const fechaHoraFormatoCorrecto = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DDTHH:mm:ss.SSS[Z]');
-
-        // Parsear la fecha ajustada al formato ISO utilizando moment
-        const fechaInicioISO = moment.utc(fechaHoraFormatoCorrecto).toISOString();
+        // Parsear la fecha ingresada al formato ISO utilizando moment
+        const fechaInicioISO = moment(fechaHoraInicio, 'DD/MM/YYYY HH:mm').toISOString();
 
         // Actualizar los campos nombre, dosis y fechaHoraInicio si se proporcionan
         if (nombre) {
@@ -256,8 +249,7 @@ const ActualizarFechaInicio = async (req, res = response) => {
             msg: 'Error al actualizar la pastilla'
         });
     }
-};
-
+}
 
 
 const BorrarPastillasPorUsuario = async (req, res = response) => {
