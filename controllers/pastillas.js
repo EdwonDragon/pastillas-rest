@@ -52,7 +52,7 @@ const TomarPastilla = async (req, res = response) => {
 
     cantidadInsertadas -= dosis;
     cantidadTomadas += dosis;
-    disponible = cantidadInsertadas === 0 ? false : true;
+    disponible = cantidadInsertadas <= 0 ? false : true;
 
     const pastilla = await Pastillas.findByIdAndUpdate(id, {
         cantidadInsertadas,
