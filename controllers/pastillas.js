@@ -69,11 +69,6 @@ const TomarPastilla = async (req, res = response) => {
     });
 }
 
-// Función para convertir una fecha string a milisegundos
-const strtotime = (str) => {
-    return new Date(str).getTime();
-};
-
 const EvaluarPastilla = async (req, res = response) => {
     const { usuario } = req.params;
 
@@ -105,7 +100,7 @@ const EvaluarPastilla = async (req, res = response) => {
 
 const verificarYEnviarAdvertencia = async (pastilla) => {
     const fechaHoraActual = new Date().getTime(); // Fecha y hora actual en milisegundos
-    const fechaHoraInicio = strtotime(pastilla.fechaHoraInicio); // Convertir fecha inicio a milisegundos
+    const fechaHoraInicio = Date.parse(pastilla.fechaHoraInicio); // Convertir fecha inicio a milisegundos
     const frecuenciaHoras = parseInt(pastilla.frecuenciaHoras) * 60 * 60 * 1000; // Convertir horas a milisegundos
 
     // Calcular la diferencia en milisegundos
