@@ -1,10 +1,5 @@
 const { Router } = require('express');
-// const { check } = require('express-validator');
 
-
-
-
-// const { validarCapos, } = require('../middlewares');
 const { PastillasGet, crearPastillas, TomarPastilla, InsertarPastilla, BorrarPastilla, EvaluarPastilla, ActualizarFechaInicio,
     BorrarPastillasPorUsuario } = require('../controllers/pastillas');
 

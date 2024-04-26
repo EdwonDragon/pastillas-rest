@@ -1,11 +1,7 @@
 const express = require('express');
 require('dotenv').config();
-const cron = require('node-cron');
 const cors = require('cors');
 const { dbConexion } = require('../database/config');
-const { Pastillas } = require('../models');
-const { sendMessage } = require('../helpers');
-
 class Server {
 
     constructor() {
@@ -14,6 +10,7 @@ class Server {
 
         this.paths = {
             pastillasPath: '/api/pastillas',
+            productosPath: '/api/productos'
         };
 
 
@@ -42,6 +39,7 @@ class Server {
 
     routes() {
         this.app.use(this.paths.pastillasPath, require('../routes/pastillas'));
+        this.app.use(this.paths.productosPath, require('../routes/productos'));
     }
 
 
